@@ -1,0 +1,14 @@
+# 数据集与训练输出(体积大,可重建)
+data/
+runs/
+
+# 预训练底模(ultralytics 会自动下载)
+/yolo11n.pt
+/yolo26n.pt
+/yolo26s.pt
+
+# RTSP 服务器二进制
+mediamtx/
+
+__pycache__/
+*.pyc
