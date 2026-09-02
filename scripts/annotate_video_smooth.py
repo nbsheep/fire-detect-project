@@ -1,7 +1,11 @@
 """annotate_video_smooth.py — 烟雾检测标注视频(带时间平滑,消除框闪烁)
 ================================================================
 用法:
-  python scripts/annotate_video_smooth.py <视频路径> [输出路径] [模型路径]
+  python scripts/annotate_video_smooth.py <视频路径> [输出路径] [模型路径] [--no-fire]
+
+--no-fire: 无火演示模式。彩烟/演练场景不可能有明火,模型偶尔会把浓密
+红烟误判成"火"类;开启后丢弃一切"火"类检测,状态栏只报烟雾。
+真实巡检不要开,否则可能漏报真火。
 
 原理: 逐帧独立检测时,弥散烟雾的置信度会在阈值上下抖动,框忽隐忽现。
 这里用滞后锁定(hysteresis):
@@ -22,6 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = sys.argv[1] if len(sys.argv) > 1 else "samples/ForestFire1.avi"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "runs/verify/smooth_annotated.avi"
 MODEL = Path(sys.argv[3]) if len(sys.argv) > 3 else ROOT / "models" / "best.pt"
+NO_FIRE = "--no-fire" in sys.argv
 
 CONF_HI = 0.20   # 新目标激活阈值
 CONF_LO = 0.05   # 存活维持阈值
@@ -63,6 +68,8 @@ def main():
                 r.boxes.cls.cpu().numpy().astype(int),
                 r.boxes.conf.cpu().numpy(),
             ):
+                if NO_FIRE and cls != 0:
+                    continue
                 dets.append((cls, xyxy.tolist(), float(c)))
 
         matched = set()
